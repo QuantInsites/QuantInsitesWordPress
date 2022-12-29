@@ -1,21 +1,45 @@
 <?php
 
-// This plugin runs a script from an API automatically whenever a specific page of a site is loaded.
+// This plugin sends relevant form information to Quant Insites upon form submission
 
 /*
- * Plugin Name: Page Load Script Runner
- * Description: Runs a script from an API whenever a specific page of a site is loaded
+ * Plugin Name: Quant Insites WordPress
+ * Description: This plugin sends relevant form information to Quant Insites upon form submission
  * Version: 1.0
- * Author: Your Company
+ * Author: Quant Insites 
  */
 
-add_action('template_redirect', 'run_page_load_script');
-
-function run_page_load_script() {
-    if (is_page('PAGE_SLUG')) {
-        $api_url = 'https://your-api-url.com/script.php';
-        $response = wp_remote_get($api_url);
-    }
+try {
+add_action( 'wp_footer', function () {
+    ?>
+    <script>
+    document.addEventListener( 'wpcf7mailsent', function ( event ) {
+    		
+		const fpPromise=import('https://fpcdn.io/v3/7ZdeDx4prR7ICa0vfmyS')
+			.then(FingerprintJS=>FingerprintJS.load()).then(fp=>fp.get())
+			.then(result=>{fetch('https://m85xmjbgqg.execute-api.us-east-1.amazonaws.com/prod/wordpress-plugin', {
+				method:'POST',
+				mode: 'no-cors',
+				headers: new Headers({ "content-type": "application/json" }),
+				body: JSON.stringify(
+					{
+					"domainName":window.location.hostname,
+	 				"pageName":window.location.pathname,
+	 				"timestamp":String(Date.now()),
+	 				"visitorId":result.visitorId,
+					"formData":JSON.stringify(event.detail.inputs),
+					}
+				)
+			})})	
+		})
+	 
+    </script>
+    <?php
+    }, 10, 0 );
+} catch (Exception $e) {
+    echo 'Caught exception: ',  $e->getMessage(), "\n";
+} finally {
+	
 }
 
 ?>
